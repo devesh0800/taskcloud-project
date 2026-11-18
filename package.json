@@ -1,0 +1,29 @@
+{
+  "name": "edusync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EduSync Monorepo - Cloud-Based Student-Teacher Assignment & Evaluation Platform",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace=apps/api run dev",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "build:api": "npm --workspace=apps/api run build",
+    "build:web": "npm --workspace=apps/web run build",
+    "build": "npm --workspace=apps/api run build && npm --workspace=apps/web run build",
+    "test:api": "npm --workspace=apps/api test"
+  },
+  "keywords": [
+    "edusync",
+    "education",
+    "assignment-management",
+    "neon-postgresql",
+    "prisma",
+    "nextjs",
+    "express"
+  ],
+  "author": "EduSync Team",
+  "license": "ISC"
+}
