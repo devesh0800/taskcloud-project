@@ -51,7 +51,18 @@ function extractToken(socket: Socket): string | null {
 export function initSocketIO(httpServer: HttpServer, frontendUrl: string): SocketIOServer {
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: [frontendUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'],
+      origin: (origin: string | undefined, callback: (err: Error | null, success?: boolean) => void) => {
+        if (!origin) return callback(null, true);
+        if (
+          origin === frontendUrl ||
+          origin === 'http://localhost:3000' ||
+          origin === 'http://127.0.0.1:3000' ||
+          origin.endsWith('.vercel.app')
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
