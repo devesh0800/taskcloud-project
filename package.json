@@ -15,6 +15,9 @@
     "build": "npm --workspace=apps/api run build && npm --workspace=apps/web run build",
     "test:api": "npm --workspace=apps/api test"
   },
+  "dependencies": {
+    "typescript": "^5.6.3"
+  },
   "keywords": [
     "edusync",
     "education",
