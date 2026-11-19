@@ -27,7 +27,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request interceptor to normalize URLs and prevent duplicate /api/v1 prefixes
+// Request interceptor to normalize URLs and attach Authorization header
 apiClient.interceptors.request.use((config) => {
   if (config.url) {
     if (config.url.startsWith('/api/v1/')) {
@@ -38,6 +38,15 @@ apiClient.interceptors.request.use((config) => {
       config.url = '/';
     }
   }
+
+  // Attach token from localStorage to guarantee auth even when third-party cookies are blocked (e.g. Incognito)
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken');
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
   return config;
 });
 
@@ -66,12 +75,33 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await apiClient.post('/auth/refresh');
+        const storedRefreshToken =
+          typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+
+        const refreshRes = await apiClient.post(
+          '/auth/refresh',
+          { refreshToken: storedRefreshToken },
+          {
+            headers: storedRefreshToken ? { 'x-refresh-token': storedRefreshToken } : undefined,
+          }
+        );
+
+        if (typeof window !== 'undefined') {
+          if (refreshRes.data?.accessToken) {
+            localStorage.setItem('accessToken', refreshRes.data.accessToken);
+          }
+          if (refreshRes.data?.refreshToken) {
+            localStorage.setItem('refreshToken', refreshRes.data.refreshToken);
+          }
+        }
+
         processQueue(null);
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
         if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           const path = window.location.pathname;
           const isProtected = ['/teacher', '/student', '/admin', '/profile', '/notifications'].some((p) =>
             path.startsWith(p)

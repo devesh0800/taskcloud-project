@@ -166,9 +166,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Connect to Socket.IO server with credentials (sends HttpOnly cookies)
+    // Connect to Socket.IO server with credentials and auth token (supports incognito & cross-domain)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const newSocket = io(socketUrl, {
       withCredentials: true,
+      auth: { token },
       transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnectionAttempts: 10,

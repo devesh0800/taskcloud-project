@@ -118,7 +118,8 @@ export class AuthController {
         success: true,
         message: 'Login successful.',
         user,
-        accessToken, // Also returned in body for optional Authorization header clients
+        accessToken, // Returned in body for cross-domain / incognito clients
+        refreshToken,
         redirectPath,
       });
     } catch (err) {
@@ -154,6 +155,7 @@ export class AuthController {
         message: 'Tokens rotated successfully.',
         user,
         accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
       });
     } catch (err: any) {
       clearAuthCookies(res);

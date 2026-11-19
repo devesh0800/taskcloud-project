@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Load authenticated user on mount via HttpOnly cookie
+  // Load authenticated user on mount via token / cookie
   const refreshUser = useCallback(async () => {
     try {
       const response = await apiClient.get<{ success: boolean; user: User }>('/auth/me');
@@ -58,6 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
     } catch {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      }
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -74,8 +78,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: boolean;
         message: string;
         user: User;
+        accessToken?: string;
+        refreshToken?: string;
         redirectPath: string;
       }>('/auth/login', data);
+
+      if (typeof window !== 'undefined') {
+        if (response.data.accessToken) {
+          localStorage.setItem('accessToken', response.data.accessToken);
+        }
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+      }
 
       setUser(response.data.user);
       toast.success(response.data.message || 'Login successful!');
@@ -147,6 +162,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Continue client cleanup even if network fails
     } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      }
       setUser(null);
       toast.info('You have been signed out.');
       router.push('/login');
